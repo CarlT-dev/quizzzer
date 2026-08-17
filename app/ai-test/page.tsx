@@ -1,0 +1,889 @@
+"use client";
+
+import { useState } from "react";
+
+type Question = {
+  question: string;
+  questionType: "multiple_choice" | "true_false";
+  choices: string[];
+  correctAnswer: number;
+};
+
+type Quiz = {
+  title: string;
+  questions: Question[];
+};
+
+type GenerationMode = "topic" | "file";
+
+export default function AITestPage() {
+  const [mode, setMode] =
+    useState<GenerationMode>("topic");
+
+  const [topic, setTopic] = useState("");
+
+  const [file, setFile] =
+    useState<File | null>(null);
+
+  const [numberOfQuestions, setNumberOfQuestions] =
+    useState(10);
+
+  const [quiz, setQuiz] =
+    useState<Quiz | null>(null);
+
+  const [loading, setLoading] =
+    useState(false);
+
+  const [saving, setSaving] =
+    useState(false);
+
+  const [error, setError] =
+    useState("");
+
+  const [shareUrl, setShareUrl] =
+    useState("");
+
+  // --------------------------------
+  // Generate Quiz
+  // --------------------------------
+
+  async function generateQuiz() {
+    setError("");
+    setQuiz(null);
+    setShareUrl("");
+
+    if (
+      !Number.isInteger(numberOfQuestions) ||
+      numberOfQuestions < 1 ||
+      numberOfQuestions > 50
+    ) {
+      setError(
+        "Number of questions must be between 1 and 50."
+      );
+      return;
+    }
+
+    // ------------------------------
+    // TOPIC MODE
+    // ------------------------------
+
+    if (mode === "topic") {
+      if (!topic.trim()) {
+        setError("Please enter a topic.");
+        return;
+      }
+
+      setLoading(true);
+
+      try {
+        const response = await fetch(
+          "/api/ai/generate-quiz",
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type": "application/json",
+            },
+
+            body: JSON.stringify({
+              topic,
+              numberOfQuestions,
+            }),
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          setError(
+            data.error ||
+              "Failed to generate quiz."
+          );
+          return;
+        }
+
+        setQuiz(data.quiz);
+      } catch (error) {
+        console.error(error);
+
+        setError(
+          "Something went wrong while generating the quiz."
+        );
+      } finally {
+        setLoading(false);
+      }
+
+      return;
+    }
+
+    // ------------------------------
+    // FILE MODE
+    // ------------------------------
+
+    if (!file) {
+      setError(
+        "Please select a file first."
+      );
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const formData = new FormData();
+
+      formData.append("file", file);
+
+      formData.append(
+        "numberOfQuestions",
+        String(numberOfQuestions)
+      );
+
+      const response = await fetch(
+        "/api/ai/generate-from-file",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(
+          data.error ||
+            "Failed to generate quiz from file."
+        );
+        return;
+      }
+
+      setQuiz(data.quiz);
+    } catch (error) {
+      console.error(error);
+
+      setError(
+        "Something went wrong while processing the file."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // --------------------------------
+  // File selection
+  // --------------------------------
+
+  function handleFileChange(
+    event: React.ChangeEvent<HTMLInputElement>
+  ) {
+    const selectedFile =
+      event.target.files?.[0];
+
+    if (!selectedFile) {
+      setFile(null);
+      return;
+    }
+
+    const fileName =
+      selectedFile.name.toLowerCase();
+
+    const allowedExtensions = [
+      ".pdf",
+      ".docx",
+      ".pptx",
+      ".txt",
+    ];
+
+    const valid = allowedExtensions.some(
+      (extension) =>
+        fileName.endsWith(extension)
+    );
+
+    if (!valid) {
+      setFile(null);
+
+      setError(
+        "Unsupported file type. Please upload PDF, DOCX, PPTX, or TXT."
+      );
+
+      event.target.value = "";
+
+      return;
+    }
+
+    setError("");
+    setFile(selectedFile);
+  }
+
+  // --------------------------------
+  // Update Question
+  // --------------------------------
+
+  function updateQuestion(
+    questionIndex: number,
+    value: string
+  ) {
+    if (!quiz) return;
+
+    const updatedQuestions =
+      [...quiz.questions];
+
+    updatedQuestions[questionIndex] = {
+      ...updatedQuestions[questionIndex],
+      question: value,
+    };
+
+    setQuiz({
+      ...quiz,
+      questions: updatedQuestions,
+    });
+  }
+
+  // --------------------------------
+  // Update Choice
+  // --------------------------------
+
+  function updateChoice(
+    questionIndex: number,
+    choiceIndex: number,
+    value: string
+  ) {
+    if (!quiz) return;
+
+    const updatedQuestions =
+      [...quiz.questions];
+
+    const updatedChoices = [
+      ...updatedQuestions[questionIndex]
+        .choices,
+    ];
+
+    updatedChoices[choiceIndex] =
+      value;
+
+    updatedQuestions[questionIndex] = {
+      ...updatedQuestions[questionIndex],
+      choices: updatedChoices,
+    };
+
+    setQuiz({
+      ...quiz,
+      questions: updatedQuestions,
+    });
+  }
+
+  // --------------------------------
+  // Correct Answer
+  // --------------------------------
+
+  function updateCorrectAnswer(
+    questionIndex: number,
+    choiceIndex: number
+  ) {
+    if (!quiz) return;
+
+    const updatedQuestions =
+      [...quiz.questions];
+
+    updatedQuestions[questionIndex] = {
+      ...updatedQuestions[questionIndex],
+      correctAnswer: choiceIndex,
+    };
+
+    setQuiz({
+      ...quiz,
+      questions: updatedQuestions,
+    });
+  }
+
+  // --------------------------------
+  // Save Quiz
+  // --------------------------------
+
+  async function saveQuiz() {
+    if (!quiz) return;
+
+    setError("");
+
+    if (!quiz.title.trim()) {
+      setError(
+        "Quiz title is required."
+      );
+      return;
+    }
+
+    if (quiz.questions.length === 0) {
+      setError(
+        "The quiz must contain at least one question."
+      );
+      return;
+    }
+
+    // Validate questions
+
+    for (
+      const [index, question]
+      of quiz.questions.entries()
+    ) {
+      if (!question.question.trim()) {
+        setError(
+          `Question ${index + 1} is empty.`
+        );
+        return;
+      }
+
+      if (
+        question.questionType ===
+        "multiple_choice"
+      ) {
+        if (
+          question.choices.length !== 4
+        ) {
+          setError(
+            `Question ${index + 1} must have 4 choices.`
+          );
+          return;
+        }
+      }
+
+      if (
+        question.questionType ===
+        "true_false"
+      ) {
+        if (
+          question.choices.length !== 2 ||
+          question.choices[0] !== "True" ||
+          question.choices[1] !== "False"
+        ) {
+          setError(
+            `Question ${index + 1} has invalid True/False choices.`
+          );
+          return;
+        }
+      }
+
+      if (
+        question.correctAnswer < 0 ||
+        question.correctAnswer >=
+          question.choices.length
+      ) {
+        setError(
+          `Question ${index + 1} has an invalid correct answer.`
+        );
+        return;
+      }
+
+      for (
+        const choice of question.choices
+      ) {
+        if (!choice.trim()) {
+          setError(
+            `Question ${index + 1} contains an empty choice.`
+          );
+          return;
+        }
+      }
+    }
+
+    setSaving(true);
+
+    try {
+      const response = await fetch(
+        "/api/quizzes",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json",
+          },
+
+          body: JSON.stringify({
+            title: quiz.title,
+            questions: quiz.questions,
+          }),
+        }
+      );
+
+      const data =
+        await response.json();
+
+      if (!response.ok) {
+        setError(
+          data.error ||
+            "Failed to save quiz."
+        );
+        return;
+      }
+
+      const fullShareUrl =
+        `${window.location.origin}${data.shareUrl}`;
+
+      setShareUrl(fullShareUrl);
+
+      console.log(
+        "Quiz created:",
+        data
+      );
+    } catch (error) {
+      console.error(error);
+
+      setError(
+        "Something went wrong while saving the quiz."
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  // --------------------------------
+  // Copy Link
+  // --------------------------------
+
+  async function copyShareLink() {
+    if (!shareUrl) return;
+
+    try {
+      await navigator.clipboard.writeText(
+        shareUrl
+      );
+
+      alert(
+        "Student link copied!"
+      );
+    } catch (error) {
+      console.error(error);
+
+      alert(
+        "Unable to copy the link."
+      );
+    }
+  }
+
+  // --------------------------------
+  // UI
+  // --------------------------------
+
+  return (
+    <main className="min-h-screen bg-gray-50 px-6 py-10">
+
+      <div className="mx-auto max-w-4xl">
+
+        {/* Header */}
+
+        <div>
+          <p className="text-sm font-medium text-gray-500">
+            QUIZZZER AI
+          </p>
+
+          <h1 className="mt-1 text-3xl font-bold text-gray-900">
+            AI Quiz Generator
+          </h1>
+
+          <p className="mt-2 text-gray-600">
+            Generate quizzes from a topic or
+            your study materials.
+          </p>
+        </div>
+
+        {/* Generator Card */}
+
+        <div className="mt-8 rounded-2xl bg-white p-6 shadow-sm">
+
+          {/* Mode Selector */}
+
+          <div className="grid grid-cols-2 gap-3">
+
+            <button
+              type="button"
+              onClick={() => {
+                setMode("topic");
+                setError("");
+              }}
+              className={`rounded-xl border px-4 py-4 text-left transition ${
+                mode === "topic"
+                  ? "border-black bg-black text-white"
+                  : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              <div className="text-lg">
+                ✨
+              </div>
+
+              <div className="mt-1 font-semibold">
+                Generate from Topic
+              </div>
+
+              <div
+                className={`mt-1 text-xs ${
+                  mode === "topic"
+                    ? "text-gray-300"
+                    : "text-gray-500"
+                }`}
+              >
+                Let AI create questions
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setMode("file");
+                setError("");
+              }}
+              className={`rounded-xl border px-4 py-4 text-left transition ${
+                mode === "file"
+                  ? "border-black bg-black text-white"
+                  : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              <div className="text-lg">
+                📄
+              </div>
+
+              <div className="mt-1 font-semibold">
+                Generate from File
+              </div>
+
+              <div
+                className={`mt-1 text-xs ${
+                  mode === "file"
+                    ? "text-gray-300"
+                    : "text-gray-500"
+                }`}
+              >
+                Use your study material
+              </div>
+            </button>
+
+          </div>
+
+          {/* Topic Mode */}
+
+          {mode === "topic" && (
+            <div className="mt-6">
+
+              <label className="text-sm font-medium text-gray-700">
+                What should the quiz be about?
+              </label>
+
+              <textarea
+                value={topic}
+                onChange={(e) =>
+                  setTopic(
+                    e.target.value
+                  )
+                }
+                placeholder="Example: Philippine Taxation"
+                rows={3}
+                className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:border-black"
+              />
+
+            </div>
+          )}
+
+          {/* File Mode */}
+
+          {mode === "file" && (
+            <div className="mt-6">
+
+              <label className="text-sm font-medium text-gray-700">
+                Study material
+              </label>
+
+              <label className="mt-2 flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 px-6 py-10 text-center transition hover:border-gray-500 hover:bg-gray-100">
+
+                <div className="text-4xl">
+                  📄
+                </div>
+
+                <p className="mt-3 font-medium text-gray-700">
+                  {file
+                    ? file.name
+                    : "Choose your study material"}
+                </p>
+
+                <p className="mt-1 text-sm text-gray-500">
+                  PDF, DOCX, PPTX, or TXT
+                </p>
+
+                {file && (
+                  <p className="mt-2 text-xs text-gray-400">
+                    {(
+                      file.size /
+                      1024 /
+                      1024
+                    ).toFixed(2)}{" "}
+                    MB
+                  </p>
+                )}
+
+                <input
+                  type="file"
+                  accept=".pdf,.docx,.pptx,.txt"
+                  onChange={
+                    handleFileChange
+                  }
+                  className="hidden"
+                />
+
+              </label>
+
+            </div>
+          )}
+
+          {/* Number of Questions */}
+
+          <div className="mt-5">
+
+            <label className="text-sm font-medium text-gray-700">
+              Number of questions
+            </label>
+
+            <input
+              type="number"
+              min={1}
+              max={50}
+              value={
+                numberOfQuestions
+              }
+              onChange={(e) =>
+                setNumberOfQuestions(
+                  Number(
+                    e.target.value
+                  )
+                )
+              }
+              className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-black"
+            />
+
+            <p className="mt-1 text-xs text-gray-500">
+              Choose between 1 and 50 questions.
+            </p>
+
+          </div>
+
+          {/* Error */}
+
+          {error && (
+            <div className="mt-4 rounded-lg bg-red-50 p-4 text-sm text-red-600">
+              {error}
+            </div>
+          )}
+
+          {/* Generate */}
+
+          <button
+            onClick={generateQuiz}
+            disabled={
+              loading || saving
+            }
+            className="mt-6 w-full rounded-xl bg-black px-6 py-3 font-medium text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {loading
+              ? "Generating Quiz..."
+              : "✨ Generate Quiz"}
+          </button>
+
+        </div>
+
+        {/* Generated Quiz */}
+
+        {quiz && (
+          <div className="mt-8">
+
+            <div className="rounded-2xl bg-white p-6 shadow-sm">
+
+              <p className="text-sm font-medium text-gray-500">
+                GENERATED QUIZ
+              </p>
+
+              <h2 className="mt-1 text-2xl font-bold text-gray-900">
+                {quiz.title}
+              </h2>
+
+              <p className="mt-1 text-sm text-gray-500">
+                {quiz.questions.length}{" "}
+                questions
+              </p>
+
+            </div>
+
+            {/* Questions */}
+
+            <div className="mt-6 space-y-6">
+
+              {quiz.questions.map(
+                (
+                  question,
+                  questionIndex
+                ) => (
+
+                  <div
+                    key={questionIndex}
+                    className="rounded-2xl bg-white p-6 shadow-sm"
+                  >
+
+                    <div className="flex items-center justify-between">
+
+                      <h3 className="font-semibold text-gray-900">
+                        Question{" "}
+                        {questionIndex + 1}
+                      </h3>
+
+                      <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
+                        {question.questionType ===
+                        "true_false"
+                          ? "True / False"
+                          : "Multiple Choice"}
+                      </span>
+
+                    </div>
+
+                    {/* Question */}
+
+                    <textarea
+                      value={
+                        question.question
+                      }
+                      onChange={(e) =>
+                        updateQuestion(
+                          questionIndex,
+                          e.target.value
+                        )
+                      }
+                      rows={3}
+                      className="mt-4 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-black"
+                    />
+
+                    {/* Choices */}
+
+                    <div className="mt-5 space-y-3">
+
+                      {question.choices.map(
+                        (
+                          choice,
+                          choiceIndex
+                        ) => (
+
+                          <div
+                            key={choiceIndex}
+                            className="flex items-center gap-3"
+                          >
+
+                            <input
+                              type="radio"
+                              name={`question-${questionIndex}`}
+                              checked={
+                                question.correctAnswer ===
+                                choiceIndex
+                              }
+                              onChange={() =>
+                                updateCorrectAnswer(
+                                  questionIndex,
+                                  choiceIndex
+                                )
+                              }
+                              className="h-4 w-4"
+                            />
+
+                            <input
+                              type="text"
+                              value={choice}
+                              onChange={(e) =>
+                                updateChoice(
+                                  questionIndex,
+                                  choiceIndex,
+                                  e.target.value
+                                )
+                              }
+                              className="flex-1 rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-black"
+                            />
+
+                          </div>
+
+                        )
+                      )}
+
+                    </div>
+
+                    <p className="mt-3 text-xs text-gray-500">
+                      Select the radio button to change
+                      the correct answer.
+                    </p>
+
+                  </div>
+
+                )
+              )}
+
+            </div>
+
+            {/* Save */}
+
+            <button
+              onClick={saveQuiz}
+              disabled={saving}
+              className="mt-6 w-full rounded-xl bg-black px-6 py-4 font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {saving
+                ? "Saving Quiz..."
+                : "🚀 Save Quiz & Create Student Link"}
+            </button>
+
+          </div>
+        )}
+
+        {/* Success */}
+
+        {shareUrl && (
+          <div className="mt-6 rounded-2xl bg-white p-6 shadow-sm">
+
+            <div className="rounded-xl bg-green-50 p-5">
+
+              <p className="font-semibold text-green-700">
+                🎉 Quiz created successfully!
+              </p>
+
+              <p className="mt-2 text-sm text-green-700">
+                Students can now use this link to
+                take the quiz.
+              </p>
+
+              <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+
+                <input
+                  value={shareUrl}
+                  readOnly
+                  className="flex-1 rounded-lg border border-green-200 bg-white px-4 py-3 text-sm"
+                />
+
+                <button
+                  onClick={
+                    copyShareLink
+                  }
+                  className="rounded-lg bg-black px-5 py-3 text-sm font-medium text-white hover:bg-gray-800"
+                >
+                  Copy Link
+                </button>
+
+                <a
+                  href={shareUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-lg border border-gray-300 bg-white px-5 py-3 text-center text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Open Quiz
+                </a>
+
+              </div>
+
+            </div>
+
+          </div>
+        )}
+
+      </div>
+
+    </main>
+  );
+}
