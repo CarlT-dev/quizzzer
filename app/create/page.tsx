@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 type Question = {
   question: string;
@@ -146,8 +147,19 @@ export default function CreateQuizPage() {
 
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Create Quiz
+          <Link
+            href="/"
+            className="text-sm font-medium text-gray-500 hover:text-gray-900"
+          >
+            ← Back to Home
+          </Link>
+
+          <p className="mt-8 text-sm font-medium text-gray-500">
+            QUIZZZER · WRITE QUIZ
+          </p>
+
+          <h1 className="mt-1 text-3xl font-bold text-gray-900">
+            Write Your Own Quiz
           </h1>
 
           <p className="mt-2 text-gray-600">
