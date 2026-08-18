@@ -43,7 +43,7 @@ const IMAGE_EXTENSIONS = [
   ".gif",
 ] as const;
 
-const MAX_TOTAL_FILE_SIZE = 20 * 1024 * 1024;
+const MAX_TOTAL_FILE_SIZE = 4 * 1024 * 1024;
 
 function getExtension(fileName: string) {
   const lower = fileName.toLowerCase();

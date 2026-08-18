@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import imageCompression from "browser-image-compression";
 import { StudyMaterialsPicker } from "@/components/StudyMaterialsPicker";
 
 type Question = {
@@ -93,9 +94,31 @@ export default function CreateShareableQuizPage() {
     try {
       const formData = new FormData();
 
-      files.forEach((file) => {
-        formData.append("files", file);
-      });
+      // Options to compress photos and keep payload under Vercel's 4.5 MB limit
+      const compressionOptions = {
+        maxSizeMB: 0.8,
+        maxWidthOrHeight: 1920,
+        useWebWorker: true,
+      };
+
+      // Compress photos before appending to FormData
+      for (const file of files) {
+        if (file.type.startsWith("image/")) {
+          try {
+            const compressedFile = await imageCompression(
+              file,
+              compressionOptions
+            );
+            formData.append("files", compressedFile, compressedFile.name);
+          } catch (err) {
+            console.warn("Compression failed, using original file:", err);
+            formData.append("files", file);
+          }
+        } else {
+          // Keep PDFs, DOCX, etc. as-is
+          formData.append("files", file);
+        }
+      }
 
       formData.append(
         "numberOfQuestions",
