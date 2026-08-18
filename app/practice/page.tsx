@@ -3,6 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { StudyMaterialsPicker } from "@/components/StudyMaterialsPicker";
+import MockExamClient, {
+  type MockExam,
+} from "@/components/MockExamClient";
 
 const difficulties = ["Easy", "Medium", "Hard"];
 
@@ -19,18 +22,6 @@ const questionTypes = [
 
 type GenerationMode = "topic" | "file" | "topic_file";
 
-type GeneratedQuestion = {
-  question: string;
-  questionType: "multiple_choice" | "true_false";
-  choices: string[];
-  correctAnswer: number;
-};
-
-type GeneratedQuiz = {
-  title: string;
-  questions: GeneratedQuestion[];
-};
-
 export default function PracticePage() {
   const [mode, setMode] = useState<GenerationMode>("topic");
   const [topic, setTopic] = useState("");
@@ -43,7 +34,7 @@ export default function PracticePage() {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
   const [generatedQuiz, setGeneratedQuiz] =
-    useState<GeneratedQuiz | null>(null);
+    useState<MockExam | null>(null);
 
   function toggleDifficulty(difficulty: string) {
     setSelectedDifficulties((current) =>
@@ -168,6 +159,9 @@ export default function PracticePage() {
         return;
       }
 
+      // The quiz only lives in this component's state. It is never
+      // saved to a database and has no share code — it's for this
+      // user's session only, and disappears once they leave.
       setGeneratedQuiz(data.quiz);
     } catch (error) {
       console.error("Generate mock exam error:", error);
@@ -182,6 +176,18 @@ export default function PracticePage() {
   const photoCount = files.filter((file) =>
     file.type.startsWith("image/")
   ).length;
+
+  // Once a quiz has been generated, hand off entirely to the
+  // mock-exam-taking UI. "Generate Another" resets back to this
+  // form.
+  if (generatedQuiz) {
+    return (
+      <MockExamClient
+        quiz={generatedQuiz}
+        onExit={() => setGeneratedQuiz(null)}
+      />
+    );
+  }
 
   return (
     <main className="min-h-screen bg-gray-50 px-6 py-10">
@@ -511,30 +517,6 @@ export default function PracticePage() {
               : "Generate Mock Exam with AI"}
           </button>
         </div>
-
-        {generatedQuiz && (
-          <div className="mt-8 rounded-3xl bg-white p-6 shadow-sm ring-1 ring-gray-200 sm:p-8">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-sm font-medium text-green-600">
-                  AI Generation Successful
-                </p>
-                <h2 className="mt-1 text-2xl font-bold text-gray-900">
-                  {generatedQuiz.title}
-                </h2>
-              </div>
-
-              <span className="rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-600">
-                {generatedQuiz.questions.length} questions
-              </span>
-            </div>
-
-            <p className="mt-4 text-sm text-gray-500">
-              The AI successfully generated your mock exam. We
-              will build the actual exam-taking interface next.
-            </p>
-          </div>
-        )}
 
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
           <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-200">
