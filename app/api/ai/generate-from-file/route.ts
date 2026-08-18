@@ -1,8 +1,5 @@
 import { NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
-import { PDFParse } from "pdf-parse";
-import mammoth from "mammoth";
-import officeParser from "officeparser";
 
 export const maxDuration = 60;
 
@@ -43,7 +40,7 @@ const IMAGE_EXTENSIONS = [
   ".gif",
 ] as const;
 
-const MAX_TOTAL_FILE_SIZE = 4 * 1024 * 1024;
+const MAX_TOTAL_FILE_SIZE = 20 * 1024 * 1024;
 
 function getExtension(fileName: string) {
   const lower = fileName.toLowerCase();
@@ -117,7 +114,14 @@ async function extractDocumentText(
     return buffer.toString("utf-8");
   }
 
+  // Dynamic imports below: these heavy parsing libraries are only
+  // loaded when a file of that specific type is actually uploaded.
+  // Loading them unconditionally at module scope was crashing the
+  // serverless function at cold start on Vercel (FUNCTION_INVOCATION_FAILED),
+  // even for requests that only contained images.
+
   if (extension === ".pdf") {
+    const { PDFParse } = await import("pdf-parse");
     const parser = new PDFParse({
       data: buffer,
     });
@@ -129,6 +133,8 @@ async function extractDocumentText(
   }
 
   if (extension === ".docx") {
+    const mammoth = (await import("mammoth")).default;
+
     const result = await mammoth.extractRawText({
       buffer,
     });
@@ -137,6 +143,8 @@ async function extractDocumentText(
   }
 
   if (extension === ".pptx") {
+    const officeParser = (await import("officeparser")).default;
+
     const result = await officeParser.parseOffice(
       buffer
     );
