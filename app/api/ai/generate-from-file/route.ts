@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
-import { PDFParse } from "pdf-parse";
+import * as pdfParseModule from "pdf-parse";
 import mammoth from "mammoth";
 import officeParser from "officeparser";
 
+export const runtime = "nodejs";
 export const maxDuration = 60;
 
 const ai = new GoogleGenAI({
@@ -118,13 +119,13 @@ async function extractDocumentText(
   }
 
   if (extension === ".pdf") {
-    const parser = new PDFParse({
-      data: buffer,
-    });
+    // Handles different module export structures across pdf-parse versions
+    const parse =
+      (pdfParseModule as any).default ||
+      (pdfParseModule as any).pdfParse ||
+      pdfParseModule;
 
-    const result = await parser.getText();
-    await parser.destroy();
-
+    const result = await parse(buffer);
     return result.text;
   }
 
@@ -447,7 +448,6 @@ Return only valid JSON.
 
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
-      // model: "gemini-3.6-flash",
 
       contents: [
         {
