@@ -106,6 +106,51 @@ function parseJsonField<T>(
   }
 }
 
+function isRetryableGeminiError(error: unknown) {
+  const status =
+    (error as { status?: number | string })?.status;
+  const message =
+    error instanceof Error ? error.message : String(error);
+
+  return (
+    status === 503 ||
+    status === "UNAVAILABLE" ||
+    status === 429 ||
+    status === "RESOURCE_EXHAUSTED" ||
+    /503|overloaded|unavailable|high demand|rate limit/i.test(
+      message
+    )
+  );
+}
+
+async function generateWithRetry(
+  params: Parameters<typeof ai.models.generateContent>[0],
+  maxAttempts = 3
+) {
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await ai.models.generateContent(params);
+    } catch (error) {
+      lastError = error;
+
+      const isLastAttempt = attempt === maxAttempts;
+
+      if (isLastAttempt || !isRetryableGeminiError(error)) {
+        throw error;
+      }
+
+      const delayMs = 1000 * attempt;
+      await new Promise((resolve) =>
+        setTimeout(resolve, delayMs)
+      );
+    }
+  }
+
+  throw lastError;
+}
+
 async function extractDocumentText(
   buffer: Buffer,
   extension: string
@@ -453,7 +498,7 @@ Rules:
 Return only valid JSON.
 `;
 
-    const response = await ai.models.generateContent({
+    const response = await generateWithRetry({
       model: "gemini-3.6-flash",
 
       contents: [
@@ -596,14 +641,17 @@ Return only valid JSON.
       quiz,
     });
   } catch (error) {
+    // Full error is logged server-side only (visible in Vercel logs),
+    // never sent to the client.
     console.error("File quiz generation error:", error);
+
+    const userMessage = isRetryableGeminiError(error)
+      ? "Our AI is experiencing high demand right now. Please try again in a moment."
+      : "Something went wrong while generating your quiz. Please try again.";
 
     return NextResponse.json(
       {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to generate quiz from the uploaded materials.",
+        error: userMessage,
       },
       { status: 500 }
     );
