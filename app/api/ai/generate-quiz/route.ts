@@ -545,18 +545,37 @@ GENERAL RULES:
       success: true,
       quiz,
     });
-  } catch (error) {
-    console.error(
-      "AI generation error:",
-      error
-    );
+    } catch (error) {
+    console.error("AI generation error:", error);
 
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : String(error);
+
+    // Gemini quota exceeded
+    if (
+      errorMessage.includes("429") ||
+      errorMessage.includes("RESOURCE_EXHAUSTED") ||
+      errorMessage.includes("quota") ||
+      errorMessage.includes("Quota exceeded")
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "AI generation is temporarily unavailable because the Gemini API quota has been reached. Please try again later.",
+          code: "AI_QUOTA_EXCEEDED",
+        },
+        { status: 429 }
+      );
+    }
+
+    // Other Gemini/API errors
     return NextResponse.json(
       {
         error:
-          error instanceof Error
-            ? error.message
-            : "Failed to generate quiz.",
+          errorMessage ||
+          "Failed to generate quiz.",
       },
       { status: 500 }
     );
