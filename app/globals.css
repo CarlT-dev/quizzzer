@@ -3,6 +3,7 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  color-scheme: light;
 }
 
 @theme inline {
@@ -12,40 +13,47 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+html,
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: #ffffff;
+  color: #171717;
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Apply black text only to typed content, leaving placeholders alone */
-input:not(:placeholder-shown), 
-textarea:not(:placeholder-shown), 
-select:not(:placeholder-shown) {
-  color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
-  opacity: 1 !important;
+/* Make form controls use the light theme */
+input,
+textarea,
+select,
+button {
+  color-scheme: light;
 }
 
-/* Explicitly set placeholder text color to grey */
+/* Make typed input text black */
+input,
+textarea,
+select {
+  color: #000000;
+  -webkit-text-fill-color: #000000;
+}
+
+/* Placeholder text */
 input::placeholder,
 textarea::placeholder {
   color: #9ca3af !important;
   -webkit-text-fill-color: #9ca3af !important;
-  opacity: 1 !important;
+  opacity: 1;
 }
 
-/* Fix autofill overriding text color */
+/* Autofill */
 input:-webkit-autofill,
-input:-webkit-autofill:hover, 
-input:-webkit-autofill:focus {
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
   -webkit-text-fill-color: #000000 !important;
   -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
 }

@@ -362,7 +362,7 @@ export default function MockExamClient({ quiz, onExit }: Props) {
                   {question.choices.map((choice, choiceIndex) => (
                     <label
                       key={choiceIndex}
-                      className={`flex cursor-pointer items-center gap-3 rounded-lg border p-4 transition ${
+                      className={`flex cursor-pointer items-center gap-3 rounded-lg border p-4 text-gray-900 transition ${
                         answers[questionIndex] === choiceIndex
                           ? "border-black bg-gray-50"
                           : "border-gray-200 hover:bg-gray-50"
@@ -380,7 +380,7 @@ export default function MockExamClient({ quiz, onExit }: Props) {
                         className="h-4 w-4"
                       />
 
-                      <span>
+                      <span className="text-gray-900">
                         {String.fromCharCode(65 + choiceIndex)}.{" "}
                         {choice}
                       </span>
