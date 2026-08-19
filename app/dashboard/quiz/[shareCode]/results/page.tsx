@@ -287,52 +287,42 @@ export default function ResultsPage({
                 </thead>
 
                 <tbody>
+                  {data.submissions.map((submission) => {
+                    const percentage =
+                      submission.total > 0
+                        ? Math.round((submission.score / submission.total) * 100)
+                        : 0;
 
-                  {data.submissions.map(
-                    (submission) => {
+                    return (
+                      <tr
+                        key={submission.id}
+                        className="border-b border-gray-100 last:border-0 hover:bg-gray-50"
+                      >
+                        <td className="px-3 sm:px-6 py-4">
+                          {submission.student_name}
+                        </td>
 
-                      const percentage =
-                        submission.total > 0
-                          ? Math.round(
-                              (submission.score /
-                                submission.total) *
-                                100
-                            )
-                          : 0;
+                        <td className="px-3 sm:px-6 py-4 text-gray-700 whitespace-nowrap">
+                          {submission.score} / {submission.total}
+                        </td>
 
-                      return (
-                        <tr
-                          key={submission.id}
-                          className="border-b border-gray-100 last:border-0 hover:bg-gray-50"
-                        >
-                          <td className="px-6 py-4">
-                            {submission.student_name}
-                          </td>
+                        <td className="px-3 sm:px-6 py-4">
+                          <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs sm:text-sm font-medium text-gray-700 whitespace-nowrap">
+                            {percentage}%
+                          </span>
+                        </td>
 
-                          <td className="px-6 py-4 text-gray-700">
-                            {submission.score} /{" "}
-                            {submission.total}
-                          </td>
-
-                          <td className="px-6 py-4">
-                            <span className="rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-700">
-                              {percentage}%
-                            </span>
-                          </td>
-
-                          <td className="px-6 py-4">
-                            <Link
-                              href={`/dashboard/quiz/${shareCode}/results/${submission.id}`}
-                              className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
-                            >
-                              View Result
-                            </Link>
-                          </td>
-                        </tr>
-                      );
-                    }
-                  )}
-
+                        <td className="px-3 sm:px-6 py-4">
+                          <Link
+                            href={`/dashboard/quiz/${shareCode}/results/${submission.id}`}
+                            className="inline-flex items-center justify-center rounded-lg bg-black px-3 py-2 text-xs sm:text-sm font-medium text-white hover:bg-gray-800 whitespace-nowrap"
+                          >
+                            View<span className="hidden sm:inline">&nbsp;Result</span>
+                          </Link>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
 
               </table>
