@@ -147,15 +147,40 @@ export default function PracticePage() {
         });
       }
 
-      const data = await response.json();
+      const contentType = response.headers.get("content-type") || "";
 
-      if (!response.ok) {
-        setError(data.error || "Failed to generate mock exam.");
+      let data: any;
+
+      if (contentType.includes("application/json")) {
+        data = await response.json();
+      } else {
+        const text = await response.text();
+
+        console.error("Non-JSON response from API:", text);
+
+        setError(
+          `Server returned an unexpected response (${response.status}).`
+        );
+
         return;
       }
 
-      if (!data.quiz) {
+      if (!response.ok) {
+        console.error("API error:", data);
+
+        setError(
+          data?.error ||
+            `Failed to generate mock exam. Server returned ${response.status}.`
+        );
+
+        return;
+      }
+
+      if (!data?.quiz) {
+        console.error("Invalid API response:", data);
+
         setError("AI did not return a valid quiz.");
+
         return;
       }
 
@@ -166,7 +191,9 @@ export default function PracticePage() {
     } catch (error) {
       console.error("Generate mock exam error:", error);
       setError(
-        "Something went wrong while generating the mock exam."
+        error instanceof Error
+        ? error.message
+        : "Something went wrong while generating the mock exam."
       );
     } finally {
       setGenerating(false);
