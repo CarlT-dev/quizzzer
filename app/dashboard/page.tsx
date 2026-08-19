@@ -83,7 +83,7 @@ export default function DashboardPage() {
           </div>
 
           <Link
-            href="/ai-test"
+            href="/create-quiz"
             className="rounded-xl bg-black px-5 py-3 text-center font-medium text-white transition hover:bg-gray-800"
           >
             + Create Quiz
