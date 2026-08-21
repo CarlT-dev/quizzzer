@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export const MAX_TOTAL_FILE_SIZE = 20 * 1024 * 1024;
 
@@ -55,6 +55,7 @@ function SelectedMaterial({
   const [previewUrl, setPreviewUrl] = useState<string | null>(
     null
   );
+
   const showPreview = isImageFile(file);
 
   useEffect(() => {
@@ -90,6 +91,7 @@ function SelectedMaterial({
           <p className="truncate text-sm font-medium text-gray-800">
             {file.name}
           </p>
+
           <p className="text-xs text-gray-500">
             {formatFileSize(file.size)}
           </p>
@@ -125,6 +127,28 @@ export function StudyMaterialsPicker({
     0
   );
 
+  const selectedMaterialsRef =
+    useRef<HTMLDivElement>(null);
+
+  const previousFileCountRef = useRef(files.length);
+
+  useEffect(() => {
+    const previousFileCount =
+      previousFileCountRef.current;
+
+    const filesWereAdded =
+      files.length > previousFileCount;
+
+    if (filesWereAdded) {
+      selectedMaterialsRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+
+    previousFileCountRef.current = files.length;
+  }, [files]);
+
   function addFiles(
     selectedFiles: File[],
     kind: "document" | "image"
@@ -147,6 +171,7 @@ export function StudyMaterialsPicker({
           ? `"${invalidFile.name}" is not supported. Please use PDF, DOCX, PPTX, or TXT files.`
           : `"${invalidFile.name}" is not a supported photo. Please use JPG, PNG, WEBP, HEIC, or GIF.`
       );
+
       return;
     }
 
@@ -155,10 +180,14 @@ export function StudyMaterialsPicker({
       0
     );
 
-    if (totalFileSize + newFilesSize > MAX_TOTAL_FILE_SIZE) {
+    if (
+      totalFileSize + newFilesSize >
+      MAX_TOTAL_FILE_SIZE
+    ) {
       onError(
         "The total size of your files and photos cannot exceed 20 MB."
       );
+
       return;
     }
 
@@ -169,6 +198,7 @@ export function StudyMaterialsPicker({
     onFilesChange(
       files.filter((_, fileIndex) => fileIndex !== index)
     );
+
     onError("");
   }
 
@@ -179,6 +209,7 @@ export function StudyMaterialsPicker({
       </label>
 
       <div className="mt-2 grid gap-3 sm:grid-cols-2">
+        {/* Add Files */}
         <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 px-5 py-8 text-center transition hover:border-gray-500 hover:bg-gray-100">
           <div className="text-3xl">📄</div>
 
@@ -199,12 +230,14 @@ export function StudyMaterialsPicker({
                 Array.from(event.target.files ?? []),
                 "document"
               );
+
               event.target.value = "";
             }}
             className="hidden"
           />
         </label>
 
+        {/* Add Photos */}
         <div className="flex flex-col rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 px-5 py-8 text-center">
           <div className="text-3xl">📷</div>
 
@@ -217,34 +250,40 @@ export function StudyMaterialsPicker({
           </p>
 
           <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-center">
+            {/* Take Photo */}
             <label className="cursor-pointer rounded-lg bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800">
               Take photo
+
               <input
                 type="file"
-                accept="image/*"
+                accept="image/*,.jpg,.jpeg,.png,.webp,.heic,.heif,.gif"
                 capture="environment"
                 onChange={(event) => {
                   addFiles(
                     Array.from(event.target.files ?? []),
                     "image"
                   );
+
                   event.target.value = "";
                 }}
                 className="hidden"
               />
             </label>
 
+            {/* Choose Photos */}
             <label className="cursor-pointer rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800 transition hover:bg-gray-50">
               Choose photos
+
               <input
                 type="file"
                 multiple
-                accept="image/*"
+                accept="image/*,.jpg,.jpeg,.png,.webp,.heic,.heif,.gif"
                 onChange={(event) => {
                   addFiles(
                     Array.from(event.target.files ?? []),
                     "image"
                   );
+
                   event.target.value = "";
                 }}
                 className="hidden"
@@ -258,8 +297,12 @@ export function StudyMaterialsPicker({
         Maximum total size: 20 MB
       </p>
 
+      {/* Selected Materials */}
       {files.length > 0 && (
-        <div className="mt-4 space-y-2">
+        <div
+          ref={selectedMaterialsRef}
+          className="mt-4 scroll-mt-24 space-y-2"
+        >
           {files.map((file, index) => (
             <SelectedMaterial
               key={`${file.name}-${file.size}-${index}`}
