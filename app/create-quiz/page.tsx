@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import imageCompression from "browser-image-compression";
 import { StudyMaterialsPicker } from "@/components/StudyMaterialsPicker";
@@ -29,6 +29,31 @@ export default function CreateShareableQuizPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [shareUrl, setShareUrl] = useState("");
+
+  // Refs used to scroll to the generated quiz section and the
+  // share-link section once they appear.
+  const quizSectionRef = useRef<HTMLDivElement | null>(null);
+  const shareSectionRef = useRef<HTMLDivElement | null>(null);
+
+  // Scroll to the generated quiz as soon as it's set.
+  useEffect(() => {
+    if (quiz) {
+      quizSectionRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [quiz]);
+
+  // Scroll to the share link section as soon as it's created.
+  useEffect(() => {
+    if (shareUrl) {
+      shareSectionRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [shareUrl]);
 
   async function generateQuiz() {
     setError("");
@@ -459,7 +484,7 @@ export default function CreateShareableQuizPage() {
         </div>
 
         {quiz && (
-          <div className="mt-8">
+          <div ref={quizSectionRef} className="mt-8 scroll-mt-6">
             <div className="rounded-2xl bg-white p-6 shadow-sm">
               <p className="text-sm font-medium text-gray-500">
                 GENERATED QUIZ
@@ -553,20 +578,23 @@ export default function CreateShareableQuizPage() {
             >
               {saving
                 ? "Saving Quiz..."
-                : "🚀 Save Quiz & Create Student Link"}
+                : "🚀 Save Quiz & Create Link"}
             </button>
           </div>
         )}
 
         {shareUrl && (
-          <div className="mt-6 rounded-2xl bg-white p-6 shadow-sm">
+          <div
+            ref={shareSectionRef}
+            className="mt-6 scroll-mt-6 rounded-2xl bg-white p-6 shadow-sm"
+          >
             <div className="rounded-xl bg-green-50 p-5">
               <p className="font-semibold text-green-700">
                 🎉 Quiz created successfully!
               </p>
 
               <p className="mt-2 text-sm text-green-700">
-                Students can now use this link to take the quiz.
+                Everyone can now use this link to take the quiz.
               </p>
 
               <div className="mt-4 flex flex-col gap-3 sm:flex-row">

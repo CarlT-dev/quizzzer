@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
 } from "react";
+import Link from "next/link";
 
 type Choice = {
   id: string;
@@ -51,6 +52,9 @@ export default function QuizClient({
 
   const [total, setTotal] =
     useState<number | null>(null);
+
+  const [submissionId, setSubmissionId] =
+    useState<string | null>(null);
 
   const [loading, setLoading] =
     useState(false);
@@ -273,6 +277,7 @@ export default function QuizClient({
 
       setScore(data.score);
       setTotal(data.total);
+      setSubmissionId(data.submissionId);
       setSubmitted(true);
     } catch (error) {
       console.error(error);
@@ -323,6 +328,15 @@ export default function QuizClient({
               {percentage}%
             </p>
           </div>
+
+          {submissionId && (
+            <Link
+              href={`/quiz/${quiz.shareCode}/result?submissionId=${submissionId}`}
+              className="mt-8 inline-block w-full rounded-lg bg-black px-6 py-3 font-medium text-white transition hover:bg-gray-800"
+            >
+              See Result
+            </Link>
+          )}
 
         </div>
       </main>

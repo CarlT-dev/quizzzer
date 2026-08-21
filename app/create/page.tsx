@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
 type Question = {
@@ -21,6 +21,23 @@ export default function CreateQuizPage() {
     correctAnswer: 0,
   }
   ]);
+
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [shareUrl, setShareUrl] = useState("");
+
+  // Ref used to scroll to the generated link section once it appears.
+  const shareSectionRef = useRef<HTMLDivElement | null>(null);
+
+  // Scroll to the share link section as soon as it's created.
+  useEffect(() => {
+    if (shareUrl) {
+      shareSectionRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [shareUrl]);
 
   function updateQuestion(
     questionIndex: number,
@@ -108,6 +125,10 @@ export default function CreateQuizPage() {
   }
 
   async function saveQuiz() {
+    setError("");
+    setShareUrl("");
+    setSaving(true);
+
     try {
       const response = await fetch("/api/quizzes", {
         method: "POST",
@@ -123,21 +144,29 @@ export default function CreateQuizPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        alert(data.error || "Failed to save quiz.");
+        setError(data.error || "Failed to save quiz.");
         return;
       }
 
-      console.log(`Student link:\n${window.location.origin}${data.shareUrl}`);
-
-      alert(
-        `Quiz created!\n\nStudent link:\n${window.location.origin}${data.shareUrl}`
-      );
-
-      console.log("Quiz created:", data);
+      const fullShareUrl = `${window.location.origin}${data.shareUrl}`;
+      setShareUrl(fullShareUrl);
     } catch (error) {
       console.error(error);
+      setError("Something went wrong while saving the quiz.");
+    } finally {
+      setSaving(false);
+    }
+  }
 
-      alert("Something went wrong while saving the quiz.");
+  async function copyShareLink() {
+    if (!shareUrl) return;
+
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      alert("Student link copied!");
+    } catch (error) {
+      console.error(error);
+      alert("Unable to copy the link.");
     }
   }
 
@@ -340,13 +369,63 @@ export default function CreateQuizPage() {
           + Add Question
         </button>
 
+        {/* Error */}
+        {error && (
+          <div className="mt-4 rounded-lg bg-red-50 p-4 text-sm text-red-600">
+            {error}
+          </div>
+        )}
+
         {/* Save Quiz */}
         <button
           onClick={saveQuiz}
-          className="mt-4 w-full rounded-lg bg-black px-6 py-3 font-medium text-white transition hover:bg-gray-800"
+          disabled={saving}
+          className="mt-4 w-full rounded-lg bg-black px-6 py-3 font-medium text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Save Quiz
+          {saving ? "Saving Quiz..." : "Save Quiz"}
         </button>
+
+        {/* Generated Link */}
+        {shareUrl && (
+          <div
+            ref={shareSectionRef}
+            className="mt-6 scroll-mt-6 rounded-2xl bg-white p-6 shadow-sm"
+          >
+            <div className="rounded-xl bg-green-50 p-5">
+              <p className="font-semibold text-green-700">
+                🎉 Quiz created successfully!
+              </p>
+
+              <p className="mt-2 text-sm text-green-700">
+                Students can now use this link to take the quiz.
+              </p>
+
+              <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                <input
+                  value={shareUrl}
+                  readOnly
+                  className="flex-1 rounded-lg border border-green-200 bg-white px-4 py-3 text-sm"
+                />
+
+                <button
+                  onClick={copyShareLink}
+                  className="rounded-lg bg-black px-5 py-3 text-sm font-medium text-white hover:bg-gray-800"
+                >
+                  Copy Link
+                </button>
+
+                <a
+                  href={shareUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-lg border border-gray-300 bg-white px-5 py-3 text-center text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Open Quiz
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
 
       </div>
     </main>

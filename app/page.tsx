@@ -159,7 +159,7 @@ export default function Home() {
 
                 <li className="flex gap-3">
                   <span>✓</span>
-                  Save and share a student link
+                  Save and share the link
                 </li>
 
               </ul>
