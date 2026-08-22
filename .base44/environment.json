@@ -1,0 +1,37 @@
+{
+  "previewPort": 3000,
+  "healthPath": "/",
+  "startCommand": "docker compose -f docker-compose.base44.yml up -d",
+  "secrets": [
+    {
+      "name": "NEXT_PUBLIC_SUPABASE_URL",
+      "description": "Supabase project URL (e.g. https://xxxx.supabase.co) from the Supabase dashboard > Project Settings > API",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
+      "description": "Supabase anon/publishable key from the Supabase dashboard > Project Settings > API",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "SUPABASE_SERVICE_ROLE_KEY",
+      "description": "Supabase service_role key (server-side admin) from the Supabase dashboard > Project Settings > API",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "GEMINI_API_KEY",
+      "description": "Google Gemini API key from Google AI Studio (aistudio.google.com) > Get API key",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "RESEND_API_KEY",
+      "description": "Resend API key from the Resend dashboard > API Keys (optional; admin email notifications)",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "ADMIN_NOTIFICATION_EMAILS",
+      "description": "Comma-separated admin email addresses for Resend notifications (optional)",
+      "requiredAtBoot": false
+    }
+  ]
+}
