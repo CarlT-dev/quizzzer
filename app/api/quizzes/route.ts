@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { notifyAdmins } from "@/lib/notify-admins";
 
 type QuestionInput = {
   question: string;
@@ -352,6 +353,22 @@ export async function POST(request: Request) {
         );
       }
     }
+
+    // -----------------------------
+    // Notify admins (does not block
+    // or fail the response if it
+    // errors)
+    // -----------------------------
+
+    await notifyAdmins(
+      `New quiz created: ${title.trim()}`,
+      `
+        <p>A new quiz was created.</p>
+        <p><strong>Title:</strong> ${title.trim()}</p>
+        <p><strong>Questions:</strong> ${questions.length}</p>
+        <p><strong>Share code:</strong> ${quiz.share_code}</p>
+      `
+    );
 
     // -----------------------------
     // Success

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { notifyAdmins } from "@/lib/notify-admins";
 
 export async function POST(
   request: Request,
@@ -184,6 +185,21 @@ export async function POST(
         );
       }
     }
+
+    // -----------------------------
+    // Notify admins (does not block
+    // or fail the response if it
+    // errors)
+    // -----------------------------
+
+    await notifyAdmins(
+      `Quiz submitted: ${quiz.title}`,
+      `
+        <p><strong>${studentName}</strong> submitted
+        "<strong>${quiz.title}</strong>".</p>
+        <p><strong>Score:</strong> ${score} / ${total}</p>
+      `
+    );
 
     // -----------------------------
     // Return result
