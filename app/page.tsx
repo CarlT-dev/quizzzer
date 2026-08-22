@@ -1,188 +1,138 @@
 import Link from "next/link";
 import Image from "next/image";
+import { FeatureCard } from "@/components/ui/FeatureCard";
+import { LiquidParticles } from "@/components/ui/LiquidParticles";
+
+const features = [
+  {
+    label: "Practice",
+    icon: "📚",
+    title: "Self Practice",
+    description:
+      "Practice with AI-generated mock exams from a topic, files, or photos of your notes.",
+    features: [
+      "Choose a topic, files, or photos",
+      "Generate a mock exam with AI",
+      "Take the exam and see your score",
+    ],
+    href: "/practice",
+    buttonText: "Start Practicing",
+    accent: "#6366f1",
+    variant: "solid" as const,
+  },
+  {
+    label: "AI Powered",
+    icon: "✨",
+    title: "Create with AI",
+    description:
+      "Generate a shareable quiz from a topic, study files, or photos, then edit and send it out.",
+    features: [
+      "Generate from topics, files, or photos",
+      "Edit and manage questions",
+      "Share quizzes and view results",
+    ],
+    href: "/create-quiz",
+    buttonText: "Generate Quiz",
+    accent: "#ec4899",
+    variant: "outline" as const,
+  },
+  {
+    label: "Manual",
+    icon: "✍️",
+    title: "Write Manually",
+    description:
+      "Build every question yourself when you already know exactly what you want to ask.",
+    features: [
+      "Write multiple choice or true / false",
+      "Set the correct answers",
+      "Save and share the link",
+    ],
+    href: "/create",
+    buttonText: "Write Questions",
+    accent: "#0ea5e9",
+    variant: "outline" as const,
+  },
+];
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="relative min-h-screen bg-white">
+      <LiquidParticles />
 
-      <section className="px-6 py-16 sm:py-20">
-
-        <div className="mx-auto w-full max-w-6xl">
-
-          <div className="text-center">
-
-            <div className="flex items-center gap-3">
-              <Image
-                src="/icon.png"
-                alt="Quizzzer"
-                width={40}
-                height={40}
-                className="rounded-lg"
-              />
-
-              <div>
-                <p className="text-sm font-semibold text-gray-900">
-                  QUIZZZER AI
-                </p>
-
-                <p className="text-xs text-gray-500">
-                  AI Quiz Generator
-                </p>
-              </div>
-            </div>
-
-            <h1 className="mt-4 text-5xl font-bold tracking-tight text-gray-900 sm:text-6xl">
-              Learn. Practice. Create.
-            </h1>
-
-            <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-gray-600">
-              Practice with AI mock exams, generate a shareable
-              quiz, or write every question yourself.
-            </p>
-
-          </div>
-
-          <div className="mx-auto mt-14 grid gap-6 lg:grid-cols-3">
-
-            <div className="flex flex-col rounded-3xl bg-white p-8 shadow-sm ring-1 ring-gray-200 transition hover:-translate-y-1 hover:shadow-md">
-
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100 text-2xl">
-                📚
-              </div>
-
-              <h2 className="mt-6 text-2xl font-bold text-gray-900">
-                Self Practice
-              </h2>
-
-              <p className="mt-3 leading-7 text-gray-600">
-                Practice with AI-generated mock exams from a
-                topic, files, or photos of your notes.
+      <header className="absolute inset-x-0 top-0 z-50">
+        <div className="mx-auto flex h-16 max-w-7xl items-center px-6">
+          <Link href="/" className="flex items-center gap-3">
+            <Image
+              src="/icon.png"
+              alt="Quizzzer AI"
+              width={40}
+              height={40}
+              className="rounded-xl"
+            />
+            <div className="leading-tight">
+              <p className="text-sm font-bold tracking-tight text-slate-900">
+                QUIZZZER AI
               </p>
-
-              <ul className="mt-6 flex-1 space-y-3 text-sm text-gray-600">
-
-                <li className="flex gap-3">
-                  <span>✓</span>
-                  Choose a topic, files, or photos
-                </li>
-
-                <li className="flex gap-3">
-                  <span>✓</span>
-                  Generate a mock exam with AI
-                </li>
-
-                <li className="flex gap-3">
-                  <span>✓</span>
-                  Take the exam and see your score
-                </li>
-
-              </ul>
-
-              <Link
-                href="/practice"
-                className="mt-8 block rounded-xl bg-black px-5 py-3 text-center font-medium text-white transition hover:bg-gray-800"
-              >
-                Start Practicing
-              </Link>
-
-            </div>
-
-            <div className="flex flex-col rounded-3xl bg-white p-8 shadow-sm ring-1 ring-gray-200 transition hover:-translate-y-1 hover:shadow-md">
-
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100 text-2xl">
-                ✨
-              </div>
-
-              <h2 className="mt-6 text-2xl font-bold text-gray-900">
-                Create with AI
-              </h2>
-
-              <p className="mt-3 leading-7 text-gray-600">
-                Generate a shareable quiz from a topic, study
-                files, or photos, then edit and send it out.
+              <p className="text-xs font-medium text-slate-500">
+                AI Quiz Generator
               </p>
-
-              <ul className="mt-6 flex-1 space-y-3 text-sm text-gray-600">
-
-                <li className="flex gap-3">
-                  <span>✓</span>
-                  Generate from topics, files, or photos
-                </li>
-
-                <li className="flex gap-3">
-                  <span>✓</span>
-                  Edit and manage questions
-                </li>
-
-                <li className="flex gap-3">
-                  <span>✓</span>
-                  Share quizzes and view results
-                </li>
-
-              </ul>
-
-              <Link
-                href="/create-quiz"
-                className="mt-8 block rounded-xl border border-gray-300 bg-white px-5 py-3 text-center font-medium text-gray-900 transition hover:bg-gray-50"
-              >
-                Generate Quiz
-              </Link>
-
             </div>
+          </Link>
+        </div>
+      </header>
 
-            <div className="flex flex-col rounded-3xl bg-white p-8 shadow-sm ring-1 ring-gray-200 transition hover:-translate-y-1 hover:shadow-md">
+      {/* Hero */}
+      <section className="relative">
+        {/* FIX: Changed 'to-white' to 'to-transparent' so particles show through */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-0 h-130 bg-linear-to-b from-indigo-50/40 via-white/70 to-transparent" />
+        <div className="pointer-events-none absolute left-1/2 -top-40 h-120 w-120 -translate-x-1/2 rounded-full bg-indigo-200/30 blur-3xl" />
 
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100 text-2xl">
-                ✍️
-              </div>
+        <div className="relative mx-auto flex max-w-3xl flex-col items-center px-6 pt-28 pb-20 text-center sm:pt-36">
+          <h1 className="mt-8 text-5xl font-bold tracking-tight text-gray-900 sm:text-6xl">
+            Learn.{" "}
+            <span className="bg-linear-to-r from-indigo-600 via-pink-500 to-sky-500 bg-clip-text text-transparent">
+              Practice.
+            </span>{" "}
+            Create.
+          </h1>
 
-              <h2 className="mt-6 text-2xl font-bold text-gray-900">
-                Write Manually
-              </h2>
-
-              <p className="mt-3 leading-7 text-gray-600">
-                Build every question yourself when you already
-                know exactly what you want to ask.
-              </p>
-
-              <ul className="mt-6 flex-1 space-y-3 text-sm text-gray-600">
-
-                <li className="flex gap-3">
-                  <span>✓</span>
-                  Write multiple choice or true / false
-                </li>
-
-                <li className="flex gap-3">
-                  <span>✓</span>
-                  Set the correct answers
-                </li>
-
-                <li className="flex gap-3">
-                  <span>✓</span>
-                  Save and share the link
-                </li>
-
-              </ul>
-
-              <Link
-                href="/create"
-                className="mt-8 block rounded-xl border border-gray-300 bg-white px-5 py-3 text-center font-medium text-gray-900 transition hover:bg-gray-50"
-              >
-                Write Questions
-              </Link>
-
-            </div>
-
-          </div>
-
-          <p className="mt-12 text-center text-sm text-gray-400">
-            Powered by AI · Built for learning
+          <p className="mt-6 max-w-xl text-lg leading-8 text-gray-500">
+            Practice with AI mock exams, generate a shareable quiz, or write
+            every question yourself.
           </p>
 
-        </div>
+          <div className="mt-9 flex flex-wrap items-center justify-center gap-4">
+            {/* Primary Dark Glass Button */}
+            <Link
+              href="/practice"
+              className="group relative inline-flex items-center justify-center overflow-hidden rounded-2xl border border-slate-700/50 bg-slate-900/80 px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-slate-900/20 backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-slate-600 hover:bg-black hover:shadow-xl hover:shadow-slate-900/30"
+            >
+              Start Practicing
+            </Link>
 
+            {/* Secondary Light Glass Button */}
+            <Link
+              href="/create-quiz"
+              className="inline-flex items-center justify-center rounded-2xl border border-white/80 bg-white/40 px-7 py-3.5 text-sm font-semibold text-slate-900 shadow-md shadow-slate-200/50 backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-white hover:bg-white/70 hover:shadow-lg"
+            >
+              Generate Quiz
+            </Link>
+          </div>
+        </div>
       </section>
 
+      {/* Features */}
+      <section className="relative px-6 pb-28">
+        <div className="mx-auto grid w-full max-w-5xl gap-6 lg:grid-cols-3">
+          {features.map((feature) => (
+            <FeatureCard key={feature.title} {...feature} />
+          ))}
+        </div>
+
+        <p className="mt-14 text-center text-sm text-gray-400">
+          Powered by AI · Built for learning
+        </p>
+      </section>
     </main>
   );
 }
