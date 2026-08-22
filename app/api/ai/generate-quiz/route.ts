@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 
 const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
+  apiKey: process.env.GEMINI_API_KEY3,
 });
 
 type QuestionType =
@@ -563,7 +563,7 @@ GENERAL RULES:
       return NextResponse.json(
         {
           error:
-            "AI generation is temporarily unavailable because the Gemini API quota has been reached. Please try again later.",
+            "AI generation is temporarily unavailable because the quota has been reached. Please try again later.",
           code: "AI_QUOTA_EXCEEDED",
         },
         { status: 429 }
